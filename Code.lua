@@ -15,14 +15,14 @@ term.setTextColor(colors.white)
 term.clear()
  
 -- ===== Songs setup ===
-local songIndexUrl = "https://raw.githubusercontent.com/XEXModz/DFPWM_files/refs/heads/main/index.txt"
+local songIndexUrl = "https://raw.githubusercontent.com/XEXModz/CC-Tweaked_Music_Player/refs/heads/main/index.txt"
 local songNames = textutils.unserialize(http.get(songIndexUrl).readAll())
 local songs = {}
 for i, name in ipairs(songNames) do
     table.insert(songs, {
         name = name,
         fn = function()
-            local url = "https://raw.githubusercontent.com/XEXModz/DFPWM_files/refs/heads/main/" .. name:gsub(" ", "%%20") .. ".dfpwm"
+            local url = "https://raw.githubusercontent.com/XEXModz/CC-Tweaked_Music_Player/refs/heads/main/" .. name:gsub(" ", "%%20") .. ".dfpwm"
             return http.get(url).readAll()
         end
     })
@@ -210,4 +210,5 @@ end
  
 parallel.waitForAny(playerLoop, inputLoop)
  
+
 
