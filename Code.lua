@@ -1,4 +1,4 @@
- local dfpwm = require("cc.audio.dfpwm")
+local dfpwm = require("cc.audio.dfpwm")
 local speaker = peripheral.find("speaker")
 if not speaker then error("No speaker attached") end
  
@@ -209,6 +209,3 @@ local function inputLoop()
 end
  
 parallel.waitForAny(playerLoop, inputLoop)
- 
-
-
