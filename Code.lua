@@ -1,19 +1,19 @@
 local dfpwm = require("cc.audio.dfpwm")
 local speaker = peripheral.find("speaker")
 if not speaker then error("No speaker attached") end
- 
+
 -- Terminal setup
 local mon = peripheral.find("monitor")
-if mon then
+if mon and not pocket then
     term.redirect(mon)
     if mon.setTextScale then mon.setTextScale(1) end
     mon.clear()
 end
- 
+
 term.setBackgroundColor(colors.black)
 term.setTextColor(colors.white)
 term.clear()
- 
+
 -- ===== Songs setup ===
 local songIndexUrl = "https://raw.githubusercontent.com/XEXModz/CC-Tweaked_Music_Player/refs/heads/main/index.txt"
 local songNames = textutils.unserialize(http.get(songIndexUrl).readAll())
@@ -27,9 +27,9 @@ for i, name in ipairs(songNames) do
         end
     })
 end
- 
+
 -- ===== Playback state =====
-local currentSong = nil -- choose manually
+local currentSong = nil
 local playing = false
 local stopFlag = false
 local shuffle = false
@@ -39,27 +39,24 @@ local decoder = dfpwm.make_decoder()
 local currentPage = 1
 local width, height = term.getSize()
 local topRows = 2
-local bottomRows = 5 -- reserve bottom 5 lines
+local bottomRows = 5
 local songsPerPage = height - topRows - bottomRows
- 
--- Button storage for click detection
+
 local buttons = {}
- 
+
 -- ===== UI functions =====
 local function totalPages()
     return math.max(1, math.ceil(#songs / songsPerPage))
 end
- 
+
 local function drawUI()
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
     term.clear()
- 
-    -- Now Playing
+
     term.setCursorPos(2,1)
     term.write("Now Playing: " .. (currentSong and currentSong.name or "(none)"))
- 
-    -- Song list (paged)
+
     local startIdx = (currentPage-1)*songsPerPage + 1
     local y = 3
     for i=startIdx, math.min(startIdx+songsPerPage-1, #songs) do
@@ -68,19 +65,17 @@ local function drawUI()
         term.write(songs[i].name)
         y = y + 1
     end
- 
-    -- Reserve a blank line
+
     y = y + 1
- 
-    -- Bottom controls (4 lines)
-    buttons = {} -- reset button list
+
+    buttons = {}
     local btnLines = {
         {"Shuffle: "..(shuffle and "On" or "Off"), "Loop: "..({[0]="Off",[1]="All",[2]="One"})[loopMode]},
         {"Page "..currentPage.."/"..totalPages(), "Prev","Next"},
         {(playing and "Playing" or "Stopped"), "Skip"},
         {"-","Volume: "..math.floor(volume/3*100).."%","+",""}
     }
- 
+
     local startY = height - bottomRows + 1
     for lineIdx, line in ipairs(btnLines) do
         local x = 2
@@ -93,7 +88,6 @@ local function drawUI()
                 term.setTextColor(colors.white)
                 term.write(" "..btn.." ")
                 local btnEndX = btnStartX + #btn + 1
-                -- Store button for click detection
                 table.insert(buttons,{
                     line=lineIdx, text=btn, x1=btnStartX, x2=btnEndX
                 })
@@ -102,7 +96,7 @@ local function drawUI()
         end
     end
 end
- 
+
 -- ===== Playback loop =====
 local function playerLoop()
     while true do
@@ -118,13 +112,12 @@ local function playerLoop()
                     if stopFlag then break end
                 end
             end
- 
+
             if stopFlag then
                 stopFlag = false
             else
-                -- Auto-advance
                 if loopMode == 2 then
-                    -- loop current song
+                    -- loop current
                 elseif shuffle then
                     currentSong = songs[math.random(#songs)]
                 elseif loopMode == 1 then
@@ -143,14 +136,13 @@ local function playerLoop()
         end
     end
 end
- 
+
 -- ===== Input loop =====
 local function inputLoop()
     drawUI()
     while true do
-        local e, button, x, y = os.pullEvent()
-        if e=="mouse_click" then
-            -- Song list tap
+        local e, p2, x, y = os.pullEvent()
+        if e == "mouse_click" or e == "monitor_touch" then
             local startIdx = (currentPage-1)*songsPerPage + 1
             for i=startIdx, math.min(startIdx+songsPerPage-1, #songs) do
                 local row = 3 + (i-startIdx)
@@ -161,23 +153,19 @@ local function inputLoop()
                     drawUI()
                 end
             end
- 
-            -- Bottom controls click detection
+
             for _, btn in ipairs(buttons) do
                 local btnY = (height - bottomRows + btn.line)
                 if y == btnY and x >= btn.x1 and x <= btn.x2 then
-                    -- Identify which button was clicked
                     if btn.text:find("Shuffle") then shuffle = not shuffle
                     elseif btn.text:find("Loop") then loopMode = (loopMode+1)%3
                     elseif btn.text:find("Prev") and currentPage>1 then currentPage=currentPage-1
                     elseif btn.text:find("Next") and currentPage<totalPages() then currentPage=currentPage+1
                     elseif btn.text:find("Stopped") or btn.text:find("Playing") then
                         if playing then
-                            -- Pause
                             stopFlag = true
                             playing = false
                         else
-                            -- Resume/start
                             if currentSong then
                                 playing = true
                             end
@@ -207,5 +195,5 @@ local function inputLoop()
         end
     end
 end
- 
+
 parallel.waitForAny(playerLoop, inputLoop)
