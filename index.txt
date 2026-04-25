@@ -30,5 +30,6 @@
 "V g3oxem GigaChad",
 "V The Way Life Goes",
 "V ZEZE",
-"V 679"
+"V 679",
+"V Satellites"
 }
