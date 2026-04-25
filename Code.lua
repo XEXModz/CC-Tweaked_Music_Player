@@ -14,17 +14,14 @@ term.setBackgroundColor(colors.black)
 term.setTextColor(colors.white)
 term.clear()
 
--- ===== Songs setup ===
+-- ===== Songs setup =====
 local songIndexUrl = "https://raw.githubusercontent.com/XEXModz/CC-Tweaked_Music_Player/refs/heads/main/index.txt"
 local songNames = textutils.unserialize(http.get(songIndexUrl).readAll())
 local songs = {}
 for i, name in ipairs(songNames) do
     table.insert(songs, {
         name = name,
-        fn = function()
-            local url = "https://raw.githubusercontent.com/XEXModz/CC-Tweaked_Music_Player/refs/heads/main/" .. name:gsub(" ", "%%20") .. ".dfpwm"
-            return http.get(url).readAll()
-        end
+        url = "https://raw.githubusercontent.com/XEXModz/CC-Tweaked_Music_Player/refs/heads/main/" .. name:gsub(" ", "%%20") .. ".dfpwm"
     })
 end
 
@@ -33,7 +30,7 @@ local currentSong = nil
 local playing = false
 local stopFlag = false
 local shuffle = false
-local loopMode = 0 -- 0=Off,1=All,2=One
+local loopMode = 0
 local volume = 1.5
 local decoder = dfpwm.make_decoder()
 local currentPage = 1
@@ -44,7 +41,7 @@ local songsPerPage = height - topRows - bottomRows
 
 local buttons = {}
 
--- ===== UI functions =====
+-- ===== UI =====
 local function totalPages()
     return math.max(1, math.ceil(#songs / songsPerPage))
 end
@@ -53,7 +50,6 @@ local function drawUI()
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
     term.clear()
-
     term.setCursorPos(2,1)
     term.write("Now Playing: " .. (currentSong and currentSong.name or "(none)"))
 
@@ -66,8 +62,6 @@ local function drawUI()
         y = y + 1
     end
 
-    y = y + 1
-
     buttons = {}
     local btnLines = {
         {"Shuffle: "..(shuffle and "On" or "Off"), "Loop: "..({[0]="Off",[1]="All",[2]="One"})[loopMode]},
@@ -79,68 +73,81 @@ local function drawUI()
     local startY = height - bottomRows + 1
     for lineIdx, line in ipairs(btnLines) do
         local x = 2
-        local y = startY + lineIdx - 1
-        for i, btn in ipairs(line) do
+        local lineY = startY + lineIdx - 1
+        for _, btn in ipairs(line) do
             if #btn>0 then
-                local btnStartX = x
-                term.setCursorPos(btnStartX,y)
+                term.setCursorPos(x, lineY)
                 term.setBackgroundColor(colors.gray)
                 term.setTextColor(colors.white)
                 term.write(" "..btn.." ")
-                local btnEndX = btnStartX + #btn + 1
-                table.insert(buttons,{
-                    line=lineIdx, text=btn, x1=btnStartX, x2=btnEndX
-                })
-                x = btnEndX + 2
+                table.insert(buttons,{line=lineIdx, text=btn, x1=x, x2=x+#btn+1})
+                x = x + #btn + 3
             end
         end
     end
 end
 
 -- ===== Playback loop =====
+-- Per docs: speaker buffers ONE playAudio call at a time. Track which speakers
+-- have accepted the current buffer so we don't re-call playAudio on them.
 local function playerLoop()
     while true do
         if currentSong and playing then
-            local songData = currentSong.fn()
-            local dataLen = #songData
-            for i = 1, dataLen, 16*1024 do
-                if stopFlag then break end
-                local chunk = songData:sub(i, math.min(i+16*1024-1, dataLen))
-                local buffer = decoder(chunk)
-                local allReady = false
-                while not allReady do
-                    allReady = true
-                    for _, spk in ipairs(speakers) do
-                        if not spk.playAudio(buffer, volume) then
-                            allReady = false
+            -- Fetch song data BEFORE entering the audio loop so HTTP latency
+            -- doesn't block playback timing.
+            local response = http.get(currentSong.url)
+            if not response then
+                playing = false
+                drawUI()
+            else
+                local songData = response.readAll()
+                response.close()
+                local dataLen = #songData
+
+                for i = 1, dataLen, 16*1024 do
+                    if stopFlag then break end
+                    local chunk = songData:sub(i, math.min(i+16*1024-1, dataLen))
+                    local buffer = decoder(chunk)
+
+                    -- Track acceptance per-speaker so we don't waste calls
+                    local accepted = {}
+                    local pending = #speakers
+
+                    while pending > 0 and not stopFlag do
+                        for idx, spk in ipairs(speakers) do
+                            if not accepted[idx] then
+                                if spk.playAudio(buffer, volume) then
+                                    accepted[idx] = true
+                                    pending = pending - 1
+                                end
+                            end
+                        end
+                        if pending > 0 then
+                            os.pullEvent("speaker_audio_empty")
                         end
                     end
-                    if not allReady then
-                        os.pullEvent("speaker_audio_empty")
-                        if stopFlag then break end
+                end
+
+                if stopFlag then
+                    for _, spk in ipairs(speakers) do spk.stop() end
+                    stopFlag = false
+                else
+                    if loopMode == 2 then
+                        -- loop current
+                    elseif shuffle then
+                        currentSong = songs[math.random(#songs)]
+                    elseif loopMode == 1 then
+                        local idx = 1
+                        for i,s in ipairs(songs) do if s==currentSong then idx=i end end
+                        currentSong = songs[idx % #songs + 1]
+                    else
+                        local idx = 1
+                        for i,s in ipairs(songs) do if s==currentSong then idx=i end end
+                        if idx<#songs then currentSong = songs[idx+1] else currentSong = nil playing=false end
                     end
                 end
+                drawUI()
             end
-
-            if stopFlag then
-                for _, spk in ipairs(speakers) do spk.stop() end
-                stopFlag = false
-            else
-                if loopMode == 2 then
-                    -- loop current
-                elseif shuffle then
-                    currentSong = songs[math.random(#songs)]
-                elseif loopMode == 1 then
-                    local idx = 1
-                    for i,s in ipairs(songs) do if s==currentSong then idx=i end end
-                    currentSong = songs[idx % #songs + 1]
-                else
-                    local idx = 1
-                    for i,s in ipairs(songs) do if s==currentSong then idx=i end end
-                    if idx<#songs then currentSong = songs[idx+1] else currentSong = nil playing=false end
-                end
-            end
-            drawUI()
         else
             os.sleep(0.05)
         end
@@ -176,9 +183,7 @@ local function inputLoop()
                             stopFlag = true
                             playing = false
                         else
-                            if currentSong then
-                                playing = true
-                            end
+                            if currentSong then playing = true end
                         end
                     elseif btn.text:find("Skip") then
                         if currentSong then
