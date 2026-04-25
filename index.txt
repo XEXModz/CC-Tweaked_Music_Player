@@ -30,6 +30,5 @@
 "V g3oxem GigaChad",
 "V The Way Life Goes",
 "V ZEZE",
-"V 679",
-"V Maxiu Neck Hurts"
+"V 679"
 }
