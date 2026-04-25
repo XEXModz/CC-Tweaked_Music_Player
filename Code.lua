@@ -1,6 +1,6 @@
 local dfpwm = require("cc.audio.dfpwm")
-local speaker = peripheral.find("speaker")
-if not speaker then error("No speaker attached") end
+local speakers = { peripheral.find("speaker") }
+if #speakers == 0 then error("No speakers attached") end
 
 -- Terminal setup
 local mon = peripheral.find("monitor")
@@ -107,13 +107,23 @@ local function playerLoop()
                 if stopFlag then break end
                 local chunk = songData:sub(i, math.min(i+16*1024-1, dataLen))
                 local buffer = decoder(chunk)
-                while not speaker.playAudio(buffer, volume) do
-                    local ev = {os.pullEvent("speaker_audio_empty")}
-                    if stopFlag then break end
+                local allReady = false
+                while not allReady do
+                    allReady = true
+                    for _, spk in ipairs(speakers) do
+                        if not spk.playAudio(buffer, volume) then
+                            allReady = false
+                        end
+                    end
+                    if not allReady then
+                        os.pullEvent("speaker_audio_empty")
+                        if stopFlag then break end
+                    end
                 end
             end
 
             if stopFlag then
+                for _, spk in ipairs(speakers) do spk.stop() end
                 stopFlag = false
             else
                 if loopMode == 2 then
