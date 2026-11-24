@@ -108,7 +108,7 @@ Save your changes.
 
 ### 5. Upload Your Modified Player to Pastebin
 
-Upload your modified `PASTEBINCODE.lua` to Pastebin.
+Upload your modified `PASTEBINCODE.lua` to [Pastebin](https://pastebin.com/).
 
 Once uploaded, Pastebin will provide an ID for your player.
 
