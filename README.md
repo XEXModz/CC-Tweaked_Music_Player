@@ -8,7 +8,7 @@ The player program is distributed through Pastebin, while GitHub hosts the song 
 
 ## Installation
 
-Make sure HTTP access is enabled in your CC:Tweaked configuration.
+**Note:** HTTP access is enabled by default in CC:Tweaked. If HTTP access has been disabled in your configuration, you'll need to enable it before installing the player.
 
 Open the CC:Tweaked computer terminal and run:
 
