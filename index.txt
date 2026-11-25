@@ -1,3 +1,9 @@
 {
-  "V Noisestorm - Crab Rave"
+  "V Noisestorm - Crab Rave",
+  "V sample-audio-15s-128kbps-48khz",
+  "V sample-audio-15s-mono-64kbps-48khz",
+  "V sample-audio-30s-192kbps-48khz",
+  "V sample-audio-30s-vbr-v2-48khz",
+  "V sample-audio-5min-128kbps-48khz",
+  "V sample-audio-60s-320kbps-48khz"
 }
