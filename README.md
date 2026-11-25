@@ -1,5 +1,3 @@
-Slopwash rewrite: 80 → 80
-
 # CC:Tweaked Music Player
 
 A music player for [CC:Tweaked](https://tweaked.cc/) that plays DFPWM audio in Minecraft through connected speaker peripherals.
