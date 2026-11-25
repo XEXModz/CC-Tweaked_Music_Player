@@ -6,6 +6,8 @@ The player downloads its music library from GitHub, so you don't have to transfe
 
 The player program is distributed through Pastebin. GitHub hosts the song index and audio files.
 
+![Player Interface](pic/p.png)
+
 ## Installation
 
 **Note:** HTTP access is enabled by default in CC:Tweaked. If your configuration has disabled it, enable it before installing the player.
