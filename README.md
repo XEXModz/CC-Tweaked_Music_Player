@@ -1,14 +1,16 @@
+Slopwash rewrite: 80 → 80
+
 # CC:Tweaked Music Player
 
-A music player for [CC:Tweaked](https://tweaked.cc/) that lets you play DFPWM audio in Minecraft through connected speaker peripherals.
+A music player for [CC:Tweaked](https://tweaked.cc/) that plays DFPWM audio in Minecraft through connected speaker peripherals.
 
-The player downloads its music library directly from GitHub, so songs are retrieved automatically without manually transferring audio files to your CC:Tweaked computer.
+The player downloads its music library from GitHub, so you don't have to transfer audio files to your CC:Tweaked computer by hand.
 
-The player program is distributed through Pastebin, while GitHub hosts the song index and audio files.
+The player program is distributed through Pastebin. GitHub hosts the song index and audio files.
 
 ## Installation
 
-**Note:** HTTP access is enabled by default in CC:Tweaked. If HTTP access has been disabled in your configuration, you'll need to enable it before installing the player.
+**Note:** HTTP access is enabled by default in CC:Tweaked. If your configuration has disabled it, enable it before installing the player.
 
 Open the CC:Tweaked computer terminal and run:
 
@@ -18,7 +20,7 @@ pastebin get mtcPsgPc ccplayer
 
 This downloads the player program from Pastebin and saves it as `ccplayer`.
 
-You can change `ccplayer` to any filename you prefer.
+You can rename `ccplayer` to any filename you like.
 
 ## Starting the Player
 
@@ -28,15 +30,7 @@ Run the program using the filename you chose during installation:
 ccplayer
 ```
 
-The player will retrieve the song index from GitHub and load the available music.
-
-## Requirements
-
-- Minecraft with CC:Tweaked installed.
-- A CC:Tweaked computer with HTTP access enabled.
-- At least one connected speaker peripheral.
-- An internet connection to access Pastebin and GitHub.
-- An attached monitor is optional and can be used for the player interface.
+The player retrieves the song index from GitHub and loads the available music.
 
 ## Player Features
 
@@ -51,30 +45,21 @@ The player will retrieve the song index from GitHub and load the available music
 
 ## Use Your Own Music Library
 
-You can host your own DFPWM music files on GitHub and configure the player to use your music library.
+To create your own music library, use the `ForkMe` branch of this repository.
 
-### 1. Create Your Music Repository
+### 1. Fork the Repository
 
-Fork this repository or create your own GitHub repository.
+[Open the ForkMe branch](https://github.com/XEXModz/CC-Tweaked_Music_Player/tree/ForkMe) and click **Fork** to make your own copy.
 
-Your music repository only needs:
+In your fork, select the `ForkMe` branch.
 
-- `index.txt` — the list of songs available to the player.
-- Your `.dfpwm` audio files.
+### 2. Add Your Music
 
-**You do not need to upload `PASTEBINCODE.lua` to your music repository.** The player program is downloaded separately from Pastebin.
+Upload your `.dfpwm` files to the root of your repository.
 
-### 2. Add Your Audio Files
+**All audio filenames must begin with `V ` (the letter V followed by a space).**
 
-Convert your music into DFPWM format. You can use [DfpwmForge](https://github.com/XEXModz/DfpwmForge) to convert MP3 files.
-
-Upload your converted `.dfpwm` files to the root of your GitHub repository.
-
-### 3. Create Your Song Index
-
-Create an `index.txt` file containing the names of your audio files, without the `.dfpwm` extension.
-
-For example:
+Edit `index.txt` and list your songs without the `.dfpwm` extension:
 
 ```lua
 {
@@ -84,43 +69,52 @@ For example:
 }
 ```
 
-Each entry must match its corresponding audio filename exactly.
+Keep the `V ` prefix, and make sure each entry matches its audio filename.
 
-For the example above, your repository should contain:
+You can convert MP3 files with [DfpwmForge](https://github.com/XEXModz/DfpwmForge).
+
+Your repository should look something like this:
 
 ```text
-index.txt
-V My First Song.dfpwm
-V My Second Song.dfpwm
-V My Third Song.dfpwm
+CC-Tweaked_Music_Player/
+├── README.md
+├── V My First Song.dfpwm
+├── V My Second Song.dfpwm
+├── V My Third Song.dfpwm
+└── index.txt
 ```
 
-### 4. Configure the Player to Use Your Repository
+`PASTEBINCODE.lua` does not need to be in your GitHub repository. Once you customize it and upload it to Pastebin, the player is distributed through Pastebin, and GitHub only needs to host your music files and `index.txt`.
 
-Open `PASTEBINCODE.lua` and locate the two GitHub URLs:
+### 3. Configure the Player
 
-- The URL used to download `index.txt`.
-- The URL used to download individual `.dfpwm` files.
+Open `PASTEBINCODE.lua` and replace both GitHub URLs with your repository details.
 
-Change both URLs to point to your own GitHub repository and branch.
+**Song index:**
 
-Save your changes.
+```text
+https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPOSITORY/refs/heads/ForkMe/index.txt
+```
 
-### 5. Upload Your Modified Player to Pastebin
+**Audio files:**
+
+```text
+https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPOSITORY/refs/heads/ForkMe/
+```
+
+Replace `YOUR_USERNAME` and `YOUR_REPOSITORY` with your GitHub details. Save your changes.
+
+### 4. Upload Your Player
 
 Upload your modified `PASTEBINCODE.lua` to [Pastebin](https://pastebin.com/).
 
-Once uploaded, Pastebin will provide an ID for your player.
-
-Install your customized player on a CC:Tweaked computer using:
+Install it on your CC:Tweaked computer with your new Pastebin ID:
 
 ```lua
 pastebin get YOUR_PASTEBIN_ID ccplayer
 ```
 
-Replace `YOUR_PASTEBIN_ID` with your own Pastebin ID.
-
-Your customized player will now retrieve songs from your own GitHub music library.
+Your player now uses your own GitHub music library.
 
 ---
 
