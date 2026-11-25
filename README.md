@@ -75,7 +75,6 @@ Your repository should look something like this:
 
 ```text
 CC-Tweaked_Music_Player/
-├── README.md
 ├── V My First Song.dfpwm
 ├── V My Second Song.dfpwm
 ├── V My Third Song.dfpwm
